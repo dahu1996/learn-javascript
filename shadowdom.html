@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Shadow Dom</title>
+	<style></style>
+</head>
+<body>
+	<div class="red-text" slot="foo">hello shadow dom</div>
+	<div id="container"></div>
+	<x-foo id="foo1">custom foo element</x-foo>
+	<script>
+		const container = document.querySelector("#container");
+		container.attachShadow({mode: "open"});
+		container.shadowRoot.innerHTML = `
+			<slot name='foo'></slot> 
+			<style>
+				.red-text {
+					color: red
+				}
+			</style>
+		`;
+		class FooElement extends HTMLElement {
+			static get observedAttributes() {
+				return ['bar'];
+			}
+			constructor() {
+				super();
+				console.log('dom 初始化');
+			}
+			get bar() {
+				return this.getAttribute('bar');
+			}
+			set bar(value) {
+				console.log(arguments);
+				return this.setAttribute('bar', value);
+			}
+			connectedCallback() {
+				console.log('添加dom');
+			}
+			disconnectedCallback() {
+				console.log('移除dom');
+			}
+			attributeChangedCallback(name, oldValue, newValue) {
+				console.log('dom属性变化');
+				if (oldValue !== newValue) {
+					console.log(`${oldValue} --> ${newValue}`);
+					this.setAttribute(name, newValue);
+				}
+			}
+		}
+		// 自定义元素
+		customElements.define('x-foo', FooElement);
+		const foo = document.querySelector('#foo1');
+		foo.setAttribute('bar', false);
+		console.log(foo instanceof FooElement);
+		foo.bar = true;
+
+		
+		const foo2 = document.createElement('x-foo');
+		foo2.setAttribute('bar', false);
+		foo2.content = "hello foo element";
+		document.body.appendChild(foo2);
+	</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+<!HTML Document>
+<html>
+<head>
+	<title>worker 线程</title>
+</head>
+<body>
+	<script>
+		// chrome不允许本地文件访问web worker
+		const worker = new Worker('./main.js');
+		worker.onmessage = e => {
+			console.log(e);
+			worker.postMessage('Hello World');
+		};
+	</script>	
+</body>
+</html>
