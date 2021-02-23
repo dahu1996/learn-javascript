@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>策略模式--表单验证</title>
+</head>
+<body>
+    <form id="form">
+        <div>
+            <label for="mobile">手机号</label>
+            <input type="text" id="mobile" name="number">
+        </div>
+        <div>
+            <label for="password">密码</label>
+            <input type="password" name="password">
+        </div>
+        <input type="submit" value="提交">
+    </form>
+    <script>
+        // 策略集合
+        const strategies = {
+            notEmpty: function(value, errMsg) {return !value ? errMsg : true;},
+            minLength: function(value, length, errMsg) {return value.length < length ? errMsg : true;},
+            maxLength: function(value, length, errMsg) {return value.length > length ? errMsg : true;},
+            isMobile: function(value, errMsg) { return !/(^1[3|5|8][0-9]{9}$)/.test(value) ? errMsg : true},
+        }
+        class Validator {
+            constructor() {
+                this.cache = [];
+                this.strategies = strategies;
+            }
+            add(dom, rule, errMsg) {
+                this.cache.push(() => {
+                    const [strategy, ...args] = rule.split(':');
+                    args.unshift(dom.value);
+                    args.push(errMsg);
+                    return this.strategies[strategy].apply(dom, args);
+                });
+            }
+            start() {
+                for (const validatorFunc of this.cache) {
+                    const result = validatorFunc();
+                    if (result !== true) {
+                        return result;
+                    }
+                }
+                return false;
+            }
+        }
+        const form = document.querySelector('#form');
+        form.onsubmit = (function() {
+            const validator = new Validator();
+            validator.add(form.mobile, 'isMobile', '请输入正确的手机号');
+            validator.add(form.password, 'minLength:6', '请输入大于6位的密码');
+            console.log(1);
+            return function() {
+                try {
+                    const errMsg = validator.start();
+                    console.log(errMsg);
+                    return false;
+                    return !errMsg;
+                } catch (e) {
+                    console.log(e);
+                    return false;
+                }
+
+            }
+        })();
+    </script>
+</body>
+</html>
